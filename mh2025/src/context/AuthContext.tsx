@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = (token: string) => {
     localStorage.setItem("token", token);
     const decoded = jwt.decode(token) as { userId: string; username: string };
-    setUser(decoded);
+    setUser(decoded); // 👈 this triggers re-render in any component using useAuth()
   };
 
   const logout = () => {

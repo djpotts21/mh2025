@@ -1,10 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import LogoutButton from "./LogoutButton";
+
 
 export default function Navbar() {
   const { user } = useAuth();
+  const { logout } = useAuth();
+
   return (
     <nav className="bg-blue-600 text-white px-6 py-4 shadow-md">
       <div className="flex justify-between items-center">
@@ -14,9 +16,12 @@ export default function Navbar() {
           <Link href="/about" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">About</Link>
           <Link href="/chat" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">Chat</Link>
             {user && (
-            <LogoutButton className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold cursor-pointer" />
+            <button onClick={logout} >Logout</button>
             )}
-          {!user && <Link href="/login" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">Login</Link>}
+          {!user && 
+          <Link href="/register" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">Register</Link>}
+          {!user &&
+          <Link href="/login" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">Login</Link>}
 
           
         </div>
