@@ -1,35 +1,23 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
-
-
-export default function LoginPage() {
-
-  // Constants
-
-  const { login } = useAuth(); 
+export default function RegisterPage() {
+  const { login, user } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const { user } = useAuth(); 
 
-  // Redirect to chat if user is already logged in
-  // This effect runs when the component mounts and checks if the user is logged in
+  // Redirect to /about if already logged in
   useEffect(() => {
     if (user) {
       router.push("/about");
     }
   }, [user]);
 
-
-  // Login function
-  // This function sends a POST request to the server with the username and password
-
-  const handleLogin = async () => {
-    const res = await fetch("/api/auth/login", {
+  const handleRegister = async () => {
+    const res = await fetch("/api/auth/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -38,16 +26,32 @@ export default function LoginPage() {
     const data = await res.json();
 
     if (res.ok) {
-      login(data.token); // 👈 this updates AuthContext, causing Navbar to re-render
-      router.push("/about");      // 👈 redirect to chat or wherever you want
+      alert(`✅ Registration successful!\n\nYour recovery key is:\n${data.recoveryKey}\n\nSave it safely.`);
+      
+      // Optional: log them in automatically
+      const loginRes = await fetch("/api/auth/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const loginData = await loginRes.json();
+
+      if (loginRes.ok) {
+        login(loginData.token);
+        router.push("/about");
+      } else {
+        alert("User registered, but login failed.");
+      }
     } else {
-      alert(data.error);
+      alert(data.error || "Something went wrong");
     }
   };
+
   return (
     <div className="max-w-md mx-auto mt-12 p-6 border rounded-xl shadow">
       <h2 className="text-xl font-bold mb-4 text-center">
-        Login
+        Register
       </h2>
       <input
         type="text"
@@ -63,14 +67,18 @@ export default function LoginPage() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button type="submit" onClick={handleLogin} className="w-full bg-blue-600 text-white p-2 rounded mb-2">
-        Login
+      <button
+        type="submit"
+        onClick={handleRegister}
+        className="w-full bg-green-600 text-white p-2 rounded mb-2"
+      >
+        Register
       </button>
       <p className="text-sm text-center mt-4">
         <span>
-          Don’t have an account?{" "}
-          <a className="font-bold" href="/register">
-            Register
+          Already have an account?{" "}
+          <a className="font-bold" href="/auth/login">
+            Login
           </a>
         </span>
       </p>

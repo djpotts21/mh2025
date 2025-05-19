@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseClient } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -7,12 +7,9 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json();
-
-  if (!username || !password) {
-    return NextResponse.json({ error: "Missing username or password" }, { status: 400 });
-  }
-
   const normalizedUsername = username.toLowerCase().trim();
+
+  const supabase = createSupabaseClient("");
 
   const { data: user, error } = await supabase
     .from("users")
@@ -25,7 +22,6 @@ export async function POST(req: NextRequest) {
   }
 
   const isValid = await bcrypt.compare(password, user.password_hash);
-
   if (!isValid) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }

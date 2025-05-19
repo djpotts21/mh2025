@@ -19,9 +19,9 @@ export default function Navbar() {
             <button onClick={logout} >Logout</button>
             )}
           {!user && 
-          <Link href="/register" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">Register</Link>}
+          <Link href="/auth/register" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">Register</Link>}
           {!user &&
-          <Link href="/login" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">Login</Link>}
+          <Link href="/auth/login" className="p-2 rounded-md transition-all delay-150 duration-300 ease-in-out hover:bg-indigo-500 hover:font-bold">Login</Link>}
 
           
         </div>

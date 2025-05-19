@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseClient } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json();
-
-  if (!username || !password) {
-    return NextResponse.json({ error: "Missing username or password" }, { status: 400 });
-  }
-
   const normalizedUsername = username.toLowerCase().trim();
 
-  // Check if username already exists
+  const supabase = createSupabaseClient("");
+
   const { data: existingUser } = await supabase
     .from("users")
     .select("id")
@@ -24,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   const password_hash = await bcrypt.hash(password, 10);
-  const recovery_key = uuidv4().replace(/-/g, "").slice(0, 16); // 16-char alphanumeric
+  const recovery_key = uuidv4().replace(/-/g, "").slice(0, 16);
 
   const { error } = await supabase.from("users").insert({
     username: normalizedUsername,
