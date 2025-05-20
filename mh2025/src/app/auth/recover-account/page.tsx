@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import bcrypt from "bcryptjs";
 
 export default function RecoverPage() {
   const router = useRouter();
@@ -21,7 +20,6 @@ export default function RecoverPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ username, recoveryKey }),
       });
@@ -42,7 +40,8 @@ export default function RecoverPage() {
       } else if (!res.ok) {
         alert(data.error || "Invalid recovery key");
       } else {
-        setValidated(true); // ✅ Success
+        localStorage.setItem("token", data.token); // ✅ Save short-lived JWT
+        setValidated(true); // ✅ Success, show new password form
       }
     } catch (err) {
       console.error("Request failed:", err);
@@ -54,19 +53,21 @@ export default function RecoverPage() {
 
   const handleReset = async () => {
     setLoading(true);
+
     const res = await fetch("/api/auth/reset-password", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ Use JWT from verification
       },
-      body: JSON.stringify({ username, newPassword }),
+      body: JSON.stringify({ newPassword }),
     });
 
     const data = await res.json();
+
     if (res.ok) {
-      localStorage.setItem("token", data.token); // ✅ now we have a valid token for reset-password
-      setValidated(true);
+      localStorage.setItem("token", data.token); // ✅ Replace short-lived token with new login session
+      setNewKey(data.recoveryKey);               // ✅ Show new recovery key
     } else {
       alert(data.error || "Something went wrong");
     }
