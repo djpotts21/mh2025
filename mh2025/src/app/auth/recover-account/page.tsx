@@ -1,9 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RecoverPage() {
   const router = useRouter();
+  const { login } = useAuth();
+
   const [username, setUsername] = useState("");
   const [recoveryKey, setRecoveryKey] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -11,6 +14,7 @@ export default function RecoverPage() {
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newKey, setNewKey] = useState("");
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const handleVerify = async () => {
     setLoading(true);
@@ -40,8 +44,8 @@ export default function RecoverPage() {
       } else if (!res.ok) {
         alert(data.error || "Invalid recovery key");
       } else {
-        localStorage.setItem("token", data.token); // ✅ Save short-lived JWT
-        setValidated(true); // ✅ Success, show new password form
+        localStorage.setItem("token", data.token);
+        setValidated(true);
       }
     } catch (err) {
       console.error("Request failed:", err);
@@ -58,7 +62,7 @@ export default function RecoverPage() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ Use JWT from verification
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({ newPassword }),
     });
@@ -66,14 +70,31 @@ export default function RecoverPage() {
     const data = await res.json();
 
     if (res.ok) {
-      localStorage.setItem("token", data.token); // ✅ Replace short-lived token with new login session
-      setNewKey(data.recoveryKey);               // ✅ Show new recovery key
+      localStorage.setItem("token", data.token);
+      login(data.token);
+      setNewKey(data.recoveryKey);
+      setCountdown(30); // start the countdown
     } else {
       alert(data.error || "Something went wrong");
     }
 
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown === 0) {
+      router.push("/chat");
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown, router]);
 
   return (
     <div className="max-w-md mx-auto mt-12 p-6 border rounded-xl shadow">
@@ -91,9 +112,8 @@ export default function RecoverPage() {
       <input
         type="text"
         placeholder="Recovery Key"
-        className={`w-full p-2 border rounded mb-2 transition-all duration-300 ${
-          validated ? "bg-green-100 blur-sm" : ""
-        }`}
+        className={`w-full p-2 border rounded mb-2 transition-all duration-300 ${validated ? "bg-green-100 blur-[1.5px] text-black select-none cursor-not-allowed" : ""
+          }`}
         value={recoveryKey}
         onChange={(e) => setRecoveryKey(e.target.value)}
         disabled={validated}
@@ -129,10 +149,21 @@ export default function RecoverPage() {
       )}
 
       {newKey && (
-        <div className="mt-4 bg-green-100 border border-green-500 text-green-700 p-4 rounded">
+        <div
+          className={`mt-4 p-4 rounded text-center border ${countdown !== null && countdown <= 15
+              ? "bg-red-100 border-red-500 text-red-700"
+              : "bg-green-100 border-green-500 text-green-700"
+            }`}
+        >
           <strong>✅ Password reset successful!</strong>
           <p>Your new recovery key is:</p>
           <pre className="mt-2 p-2 bg-white border rounded font-mono">{newKey}</pre>
+
+          {countdown !== null && (
+            <p className="text-sm mt-2">
+              Automatically logging in in {countdown} second{countdown !== 1 ? "s" : ""}...
+            </p>
+          )}
         </div>
       )}
     </div>
