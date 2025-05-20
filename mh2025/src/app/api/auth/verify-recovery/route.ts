@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
 
-const supabase = createClient(
+// Public client for read access
+const supabasePublic = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Service role client for secure updates (bypasses RLS)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
@@ -13,8 +20,8 @@ export async function POST(req: NextRequest) {
   const { username, recoveryKey } = await req.json();
   const normalizedUsername = username.toLowerCase().trim();
 
-  // Step 1: Lookup user by username
-  const { data: user, error } = await supabase
+  // Step 1: Fetch the user
+  const { data: user, error } = await supabasePublic
     .from("users")
     .select("*")
     .eq("username", normalizedUsername)
@@ -40,27 +47,35 @@ export async function POST(req: NextRequest) {
       updates.recovery_locked_until = lockUntil.toISOString();
     }
 
-    await supabase
+    const { error: updateError } = await supabaseAdmin
       .from("users")
       .update(updates)
       .eq("username", normalizedUsername)
       .select();
 
+    if (updateError) {
+      console.error("Failed to update attempts:", updateError);
+    }
+
     return NextResponse.json({ error: "Invalid recovery key" }, { status: 401 });
   }
 
-  // Step 3: Reset recovery lock and issue short-lived JWT
-  await supabase
+  // Step 3: Reset attempts and lockout if valid
+  await supabaseAdmin
     .from("users")
     .update({ recovery_attempts: 0, recovery_locked_until: null })
     .eq("username", normalizedUsername)
     .select();
 
-  const recoveryToken = jwt.sign(
-    { username: user.username }, // 👈 critical for RLS
+  // Step 4: Return short-lived JWT
+  const tempToken = jwt.sign(
+    { username: user.username },
     JWT_SECRET,
     { expiresIn: "15m" }
   );
 
-  return NextResponse.json({ message: "Recovery key valid", token: recoveryToken });
+  return NextResponse.json({
+    message: "Recovery key valid",
+    token: tempToken,
+  });
 }

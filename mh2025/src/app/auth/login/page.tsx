@@ -29,7 +29,7 @@ export default function LoginPage() {
   // This function sends a POST request to the server with the username and password
 
   const handleLogin = async () => {
-    const res = await fetch("/api/auth/auth/login", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),

@@ -17,7 +17,7 @@ export default function RegisterPage() {
   }, [user]);
 
   const handleRegister = async () => {
-    const res = await fetch("/api/auth/auth/register", {
+    const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -29,7 +29,7 @@ export default function RegisterPage() {
       alert(`✅ Registration successful!\n\nYour recovery key is:\n${data.recoveryKey}\n\nSave it safely.`);
       
       // Optional: log them in automatically
-      const loginRes = await fetch("/api/auth/auth/login", {
+      const loginRes = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
