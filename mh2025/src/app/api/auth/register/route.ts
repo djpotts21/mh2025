@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json();
   const normalizedUsername = username.toLowerCase().trim();
+  const avatar_url = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(username)}`;
+
 
   const supabase = createSupabaseClient("");
 
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
     username: normalizedUsername,
     password_hash,
     recovery_key,
+    avatar_url,
   });
 
   if (error) {
