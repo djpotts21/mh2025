@@ -1,39 +1,51 @@
 "use client";
 import { useState } from "react";
 
-export default function CommentForm({ postId, onComment }: { postId: string; onComment: () => void }) {
+export default function CommentForm({
+  postId,
+  parentId = null,
+  onComment,
+}: {
+  postId: string;
+  parentId?: string | null;
+  onComment: () => void;
+}) {
   const [content, setContent] = useState("");
 
   const submitComment = async () => {
+    if (!content.trim()) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     const res = await fetch("/api/feed/comment", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ post_id: postId, content }),
+      body: JSON.stringify({ post_id: postId, content, parent_id: parentId }),
     });
 
     if (res.ok) {
       setContent("");
-      onComment(); // Notify parent to refresh comments
+      onComment();
     } else {
-      alert("Failed to comment");
+      console.error("Failed to post comment");
     }
   };
 
   return (
-    <div className="mt-2 flex gap-2">
-      <input
+    <div className="mt-2">
+      <textarea
+        className="w-full p-2 border rounded text-sm"
+        rows={2}
+        placeholder="Write a comment..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Add a comment..."
-        className="flex-1 p-2 border rounded"
       />
       <button
+        className="mt-1 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
         onClick={submitComment}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-        disabled={!content.trim()}
       >
         Post
       </button>

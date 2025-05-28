@@ -2,11 +2,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import UserAvatarPopover from "./UserAvatarPopover";
-
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-
 import CommentList from "./CommentList";
 import CommentForm from "./CommentForm";
 
@@ -30,7 +28,6 @@ export default function PostCard({ post }: Props) {
   const [likes, setLikes] = useState<number>(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState([]);
 
   const fetchLikes = async () => {
     const res = await fetch("/api/feed/likes", {
@@ -83,21 +80,6 @@ export default function PostCard({ post }: Props) {
     }
   };
 
-  const fetchComments = async () => {
-    const res = await fetch("/api/feed/comments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ post_id: post.id }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      setComments(data);
-    } else {
-      console.error("Failed to load comments");
-    }
-  };
-
   useEffect(() => {
     if (user?.user_id) {
       fetchLikes();
@@ -137,10 +119,7 @@ export default function PostCard({ post }: Props) {
           <span className="text-sm">{likes}</span>
         </button>
         <button
-          onClick={() => {
-            if (!showComments) fetchComments();
-            setShowComments((prev) => !prev);
-          }}
+          onClick={() => setShowComments((prev) => !prev)}
           className="flex items-center gap-1 text-blue-600 hover:underline transition"
         >
           <ChatBubbleLeftIcon className="w-5 h-5" />
@@ -150,8 +129,8 @@ export default function PostCard({ post }: Props) {
 
       {showComments && (
         <div className="mt-4 w-full">
-          <CommentList comments={comments} postId={post.id} />
-          <CommentForm postId={post.id} onComment={fetchComments} />
+          <CommentList postId={post.id} />
+          <CommentForm postId={post.id} onComment={() => {}} />
         </div>
       )}
     </div>
