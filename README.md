@@ -5,19 +5,19 @@
 
 MH2025 is an anonymous, secure, and supportive web platform that empowers users to express themselves through journaling, connect with peers for support, and access helpful resources—all within a safe, moderated environment.
 
-## 🌟 Features
+## Features
 
-- ✍️ **Private Journaling:** Write freely with timestamped, private journal entries.
-- 🧑‍🤝‍🧑 **Anonymous Peer Support:** Connect in group chats or 1:1 conversations without revealing your identity.
-- ⚠️ **AI-Powered Moderation:** Automatically flags content related to crisis, self-harm, or abuse and directs users to support resources.
-- 🛡️ **User Safety First:** End-to-end user protection via JWT authentication, rate-limiting, and moderation pipelines.
-- 📱 **Mobile-Ready UI:** Clean, friendly, and responsive interface built with Tailwind CSS and Next.js.
+- **Private Journaling:** Write freely with timestamped, private journal entries.
+- **Anonymous Peer Support:** Connect in group chats or 1:1 conversations without revealing your identity.
+- **AI-Powered Moderation:** Automatically flags content related to crisis, self-harm, or abuse and directs users to support resources.
+- **User Safety First:** End-to-end user protection via JWT authentication, rate-limiting, and moderation pipelines.
+- **Mobile-Ready UI:** Clean, friendly, and responsive interface built with Tailwind CSS and Next.js.
 
-## 💡 Vision
+## Vision
 
 We believe everyone deserves a safe space to talk, reflect, and heal—especially those struggling silently. MH2025 is a digital sanctuary where mental health is respected, voices are heard, and peer connection is made possible without stigma or judgment.
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 - **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS
 - **Backend:** Supabase (PostgreSQL + Auth + Realtime)
@@ -25,7 +25,7 @@ We believe everyone deserves a safe space to talk, reflect, and heal—especiall
 - **Moderation:** OpenAI-integrated flagging for sensitive content
 - **Hosting:** Vercel (or any preferred provider)
 
-## 🚀 Getting Started
+## Getting Started
 
 1. **Clone the repository:**
 
@@ -59,12 +59,12 @@ npm run dev
 
 Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 📷 Screenshots
+## Screenshots
 
 <!-- Add screenshots/gifs here -->
 *(Coming soon)*
 
-## 🛠️ Project Structure
+## Project Structure
 
 ```
 /
@@ -76,7 +76,7 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 ├─ types/             # TypeScript type definitions
 ```
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions that align with our core mission of creating a safer space for mental health support.
 
@@ -86,11 +86,11 @@ We welcome contributions that align with our core mission of creating a safer sp
 4. Push to the branch: `git push origin feature/your-feature`
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
 
-## 🧠 Support & Resources
+## Support & Resources
 
 MH2025 is not a substitute for professional mental health care. If you or someone you know is in crisis, please seek immediate help through your local emergency services or trusted mental health providers.
 
