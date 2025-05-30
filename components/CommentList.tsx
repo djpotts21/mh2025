@@ -1,4 +1,6 @@
+
 "use client";
+
 import { useEffect, useState } from "react";
 import CommentForm from "./CommentForm";
 
@@ -38,37 +40,41 @@ export default function CommentList({
   const MAX_DEPTH = 2;
 
   useEffect(() => {
+    const effectiveParentId = depth === 0 && focusThread ? focusThread : parentId;
+    const path = effectiveParentId
+      ? `/api/feed/comments/${effectiveParentId}/replies`
+      : `/api/feed/comments?post_id=${postId}`;
+
     const loadComments = async () => {
-      const effectiveParentId = depth === 0 && focusThread ? focusThread : parentId;
-
-      const path = effectiveParentId
-        ? `/api/feed/comments/${effectiveParentId}/replies`
-        : `/api/feed/comments?post_id=${postId}`;
-
-      const res = await fetch(path);
-      if (!res.ok) {
-        console.error("Failed to fetch comments");
+      setLoading(true);
+      try {
+        const res = await fetch(path);
+        const json = await res.json();
+        const commentList: Comment[] = Array.isArray(json) ? json : [];
+        const filtered = effectiveParentId
+          ? commentList
+          : commentList.filter((c) => !c.parent_id);
+        setComments(filtered);
+        filtered.forEach((c: Comment) => fetchReplyCount(c.id));
+      } catch (err) {
+        console.error("Failed to fetch comments", err);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const data = await res.json();
-      const filtered = effectiveParentId ? data : data.filter((c: Comment) => !c.parent_id);
-      setComments(filtered);
-
-      filtered.forEach((c: Comment) => fetchReplyCount(c.id));
-      setLoading(false);
     };
 
     loadComments();
 
-    // Fetch focused comment root if zoomed
     if (depth === 0 && focusThread) {
       const loadFocused = async () => {
         const res = await fetch(`/api/feed/comments/${focusThread}`);
+        const data = await res.json();
         if (res.ok) {
-          const data = await res.json();
           setFocusedComment(data);
+        } else {
+          console.error("Error loading focused comment:", data.error);
+          setFocusedComment(null);
+          setFocusThread(null);
         }
       };
       loadFocused();
@@ -102,19 +108,25 @@ export default function CommentList({
     if (!alreadyExpanded && !replies[commentId]) {
       setLoadingReplies((prev) => ({ ...prev, [commentId]: true }));
       const res = await fetch(`/api/feed/comments/${commentId}/replies`);
-      const data = await res.json();
-      setReplies((prev) => ({ ...prev, [commentId]: data }));
+      const json = await res.json();
+      const replyList: Comment[] = Array.isArray(json) ? json : [];
+      console.log("Replies loaded for", commentId, replyList);
+      setReplies((prev) => ({ ...prev, [commentId]: replyList }));
       setLoadingReplies((prev) => ({ ...prev, [commentId]: false }));
     }
   };
 
-  if (loading) return <p className="text-sm text-gray-500">Loading comments...</p>;
-  if (comments.length === 0 && !focusedComment) return null;
+  if (depth === 0 && focusThread && !focusedComment) {
+    return <p className="text-sm text-gray-400">Loading thread...</p>;
+  }
 
-  const visibleComments =
-    focusThread && depth === 0
+  if (comments.length === 0 && !focusThread) return null;
+
+  const visibleComments = Array.isArray(comments)
+    ? focusThread && depth === 0
       ? comments.filter((c) => c.id === focusThread)
-      : comments;
+      : comments
+    : [];
 
   return (
     <div className="mt-2 space-y-2">
@@ -129,7 +141,7 @@ export default function CommentList({
         </div>
       )}
 
-      {focusedComment && depth === 0 && (
+      {focusThread && depth === 0 && focusedComment && (
         <div className="ml-2 border-l pl-4">
           <div className="flex items-start gap-3">
             <img
@@ -145,78 +157,88 @@ export default function CommentList({
               </p>
             </div>
           </div>
+          <CommentList
+            postId={postId}
+            parentId={focusedComment.id}
+            depth={1}
+            focusThread={focusThread}
+            setFocusThread={setFocusThread}
+          />
         </div>
       )}
 
-      {visibleComments.map((comment) => (
-        <div
-          key={comment.id}
-          className={`${depth < MAX_DEPTH ? "ml-2 border-l pl-4" : "mt-2"}`}
-        >
-          <div className="flex items-start gap-3">
-            <img
-              src={comment.user.avatar_url || "/avatar.png"}
-              alt="avatar"
-              className="w-6 h-6 rounded-full object-cover"
-            />
-            <div>
-              <p className="text-sm font-semibold">{comment.user.username}</p>
-              <p className="text-sm">{comment.content}</p>
-              <p className="text-xs text-gray-400">
-                {new Date(comment.created_at).toLocaleString()}
-              </p>
-              <div className="flex gap-4 mt-1">
-                <button
-                  onClick={() => toggleReplyForm(comment.id)}
-                  className="text-xs text-blue-600 hover:underline"
-                >
-                  Reply
-                </button>
-                <button
-                  onClick={() => handleLoadReplies(comment.id)}
-                  className="text-xs text-blue-600 hover:underline"
-                >
-                  {expandedReplies[comment.id]
-                    ? "Hide Replies"
-                    : `View Replies (${replyCounts[comment.id] ?? 0})`}
-                </button>
-              </div>
+      {!focusThread &&
+        visibleComments.map((comment) => (
+          <div
+            key={comment.id}
+            className={`${depth < MAX_DEPTH ? "ml-2 border-l pl-4" : "mt-2"}`}
+          >
+            <div className="flex items-start gap-3">
+              <img
+                src={comment.user.avatar_url || "/avatar.png"}
+                alt="avatar"
+                className="w-6 h-6 rounded-full object-cover"
+              />
+              <div>
+                <p className="text-sm font-semibold">{comment.user.username}</p>
+                <p className="text-sm">{comment.content}</p>
+                <p className="text-xs text-gray-400">
+                  {new Date(comment.created_at).toLocaleString()}
+                </p>
+                <div className="flex gap-4 mt-1">
+                  <button
+                    onClick={() => toggleReplyForm(comment.id)}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    Reply
+                  </button>
+                  <button
+                    onClick={() => handleLoadReplies(comment.id)}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    {expandedReplies[comment.id]
+                      ? "Hide Replies"
+                      : `View Replies (${replyCounts[comment.id] ?? 0})`}
+                  </button>
+                </div>
 
-              {replyingTo === comment.id && (
-                <CommentForm
-                  postId={postId}
-                  parentId={comment.id}
-                  onComment={() => {
-                    handleLoadReplies(comment.id);
-                    setReplyingTo(null);
-                  }}
-                />
-              )}
-
-              {loadingReplies[comment.id] && (
-                <p className="text-xs text-gray-400 mt-1">Loading replies...</p>
-              )}
-
-              {expandedReplies[comment.id] && replies[comment.id] && (
-                <div className="mt-2 space-y-2">
-                  {depth >= MAX_DEPTH && (
-                    <p className="text-xs text-gray-400 italic">
-                      Further replies shown flat
-                    </p>
-                  )}
-                  <CommentList
+                {replyingTo === comment.id && (
+                  <CommentForm
                     postId={postId}
                     parentId={comment.id}
-                    depth={depth >= MAX_DEPTH ? 1 : depth + 1}
-                    focusThread={focusThread}
-                    setFocusThread={setFocusThread}
+                    onComment={() => {
+                      handleLoadReplies(comment.id);
+                      setReplyingTo(null);
+                    }}
                   />
-                </div>
-              )}
+                )}
+
+                {loadingReplies[comment.id] && (
+                  <p className="text-xs text-gray-400 mt-1">Loading replies...</p>
+                )}
+
+                {expandedReplies[comment.id] &&
+                  Array.isArray(replies[comment.id]) &&
+                  replies[comment.id].length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {depth >= MAX_DEPTH && (
+                        <p className="text-xs text-gray-400 italic">
+                          Further replies shown flat
+                        </p>
+                      )}
+                      <CommentList
+                        postId={postId}
+                        parentId={comment.id}
+                        depth={depth >= MAX_DEPTH ? 1 : depth + 1}
+                        focusThread={focusThread}
+                        setFocusThread={setFocusThread}
+                      />
+                    </div>
+                  )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
     </div>
   );
 }

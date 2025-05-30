@@ -1,29 +1,38 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+// app/api/feed/comments/route.ts
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! 
-);
+import { NextRequest } from "next/server";
+import { supabase } from "@/lib/supabase"; // adjust if you don’t use alias
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const postId = searchParams.get("post_id");
 
   if (!postId) {
-    return NextResponse.json({ error: "Missing post_id" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "Missing post_id" }), {
+      status: 400,
+    });
   }
 
   const { data, error } = await supabase
     .from("comments")
-    .select("*, user:users(username, avatar_url)")
-    .eq("post_id", postId)
-    .order("created_at", { ascending: true });
+    .select(`
+      id,
+      post_id,
+      content,
+      created_at,
+      parent_id,
+      user:users (
+        username,
+        avatar_url
+      )
+    `)
+    .eq("post_id", postId);
 
   if (error) {
-    console.error("Failed to fetch comments:", error);
-    return NextResponse.json({ error: "Failed to load comments" }, { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 
-  return NextResponse.json(data);
+  return new Response(JSON.stringify(data), {
+    headers: { "Content-Type": "application/json" },
+  });
 }

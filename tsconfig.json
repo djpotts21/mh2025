@@ -3,7 +3,7 @@
     "baseUrl": ".", // ✅ add this line
     "paths": {
       "@/*": [
-        "./app/*"
+        "./*"
       ] // optional, for aliasing
     },
     "target": "ES2017",
