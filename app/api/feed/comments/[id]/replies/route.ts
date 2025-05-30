@@ -1,16 +1,16 @@
 import { NextRequest } from "next/server";
-import { supabase } from "lib/supabase"; // adjust to your setup
+import { supabase } from "lib/supabase";
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const parentId = context.params.id;
+  const commentId = params.id;
 
   const { data, error } = await supabase
     .from("comments")
     .select("id, content, created_at, parent_id, user:users(username, avatar_url)")
-    .eq("parent_id", parentId)
+    .eq("parent_id", commentId)
     .order("created_at", { ascending: true });
 
   if (error) {

@@ -1,40 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
+import { supabase } from "lib/supabase";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "10", 10);
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-export async function POST(req: NextRequest) {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) return NextResponse.json({ error: "Missing token" }, { status: 401 });
-
-  let decoded: any;
-  try {
-    decoded = jwt.verify(token, JWT_SECRET);
-  } catch {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-  }
-
-  const { content } = await req.json();
-
-  if (!decoded.user_id || !content?.trim()) {
-    return NextResponse.json({ error: "Missing user_id or content" }, { status: 400 });
-  }
-
-  const { error } = await supabase.from("posts").insert({
-    user_id: decoded.user_id,
-    content,
-  });
+  const { data, error } = await supabase
+    .from("posts")
+    .select("id, content, created_at, user_id, user:users(username, avatar_url)")
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) {
-    console.error("Post insert failed:", error);
-    return NextResponse.json({ error: "Post failed" }, { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+    });
   }
 
-  return NextResponse.json({ message: "Posted successfully" });
+  return new Response(JSON.stringify(data), {
+    headers: { "Content-Type": "application/json" },
+  });
 }
