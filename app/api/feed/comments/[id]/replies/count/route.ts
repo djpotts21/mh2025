@@ -1,11 +1,13 @@
+// app/api/feed/comments/[id]/replies/count/route.ts
+
 import { NextRequest } from "next/server";
-import { supabase } from "lib/supabase"; // Adjust if needed
+import { supabase } from "lib/supabase";
 
 export async function GET(
-  request: NextRequest,
+  _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const commentId = params.id; // ✅ SAFE inside async GET function
+  const commentId = params.id;
 
   const { count, error } = await supabase
     .from("comments")
