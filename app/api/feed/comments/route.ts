@@ -21,10 +21,10 @@ export async function GET(req: NextRequest) {
       content,
       created_at,
       parent_id,
-      user:users (
-        username,
-        avatar_url
-      )
+      profile: {
+        username: user.user_metadata.username || "Anonymous",
+        avatar_url: user.user_metadata.avatar_url || "https://api.dicebear.com/7.x/identicon/png?seed=" + user.id,
+      },
     `)
     .eq("post_id", postId);
 

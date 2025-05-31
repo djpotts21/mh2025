@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("posts")
-    .select("id, content, created_at, user_id, user:users(username, avatar_url)")
+    .select("id, content, created_at, user_id, profile: user(user_metadata(username, avatar_url))")
     .order("created_at", { ascending: false })
     .range(from, to);
 

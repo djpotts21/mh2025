@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 export async function GET() {
   const { data, error } = await supabase
     .from("posts")
-    .select("*, user:users(username, avatar_url)")
+    .select("* , profile: user(user_metadata(username, avatar_url))")
     .order("created_at", { ascending: false });
 
   if (error) {

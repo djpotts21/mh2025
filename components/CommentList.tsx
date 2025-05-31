@@ -8,9 +8,10 @@ interface Comment {
   content: string;
   created_at: string;
   parent_id?: string;
-  user: {
+  user_id: string;
+  profiles: {
     username: string;
-    avatar_url?: string;
+    avatar_url: string;
   };
 }
 
@@ -27,55 +28,34 @@ export default function CommentList({ postId, focusThread, setFocusThread }: Com
     const res = await fetch(`/api/feed/comments?post_id=${postId}`);
     if (res.ok) {
       const data = await res.json();
-      setComments(data);
+      // Sort newest to oldest
+      const sorted = data.sort((a: Comment, b: Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setComments(sorted);
     }
   };
 
   useEffect(() => {
     fetchComments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
-  const renderComment = (comment: Comment, depth = 0) => {
-    const childComments = comments.filter((c) => c.parent_id === comment.id);
-
-    return (
-      <div key={comment.id} className={`ml-${depth * 4} mb-3`}>
-        <div className="flex items-start gap-2">
+  return (
+    <div className="max-h-48 overflow-y-auto pr-2 space-y-3 border-t border-gray-700 mt-4 pt-4">
+      {comments.map((comment) => (
+        <div key={comment.id} className="flex items-start gap-3 px-2 py-1">
           <Image
-            src={comment.user.avatar_url || "/avatar.png"}
+            src={comment.profiles.avatar_url || `https://api.dicebear.com/7.x/identicon/png?seed=${comment.user_id}`}
             alt="avatar"
             width={24}
             height={24}
-            className="rounded-full"
+            className="rounded-full object-cover"
           />
-          <div>
-            <p className="font-semibold text-sm">{comment.user.username}</p>
+          <div className="flex-1">
+            <p className="font-semibold text-sm">{comment.profiles.username}</p>
             <p className="text-sm">{comment.content}</p>
-            <p className="text-xs text-gray-400">
-              {new Date(comment.created_at).toLocaleString()}
-            </p>
-            {!focusThread && (
-              <button
-                onClick={() => setFocusThread(comment.id)}
-                className="text-xs text-blue-600 mt-1 underline"
-              >
-                Reply
-              </button>
-            )}
+            <p className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString()}</p>
           </div>
         </div>
-
-        {childComments.length > 0 && (
-          <div className="mt-2">
-            {childComments.map((child) => renderComment(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const topLevelComments = comments.filter((c) => !c.parent_id);
-
-  return <div>{topLevelComments.map((c) => renderComment(c))}</div>;
+      ))}
+    </div>
+  );
 }

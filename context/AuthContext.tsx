@@ -1,43 +1,43 @@
 "use client";
+
 import { createContext, useContext, useEffect, useState } from "react";
-import jwt from "jsonwebtoken";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { User } from "@supabase/supabase-js";
 
 interface AuthContextType {
-  user: { userId: string; username: string } | null;
-  login: (token: string) => void;
-  logout: () => void;
+  user: User | null;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<AuthContextType["user"]>(null);
+  const supabase = createClientComponentClient();
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = jwt.decode(token) as { userId: string; username: string };
-        setUser(decoded);
-      } catch {
-        setUser(null);
-      }
-    }
-  }, []);
+    const getUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (data?.user) setUser(data.user);
+    };
+    getUser();
 
-  const login = (token: string) => {
-    localStorage.setItem("token", token);
-    const decoded = jwt.decode(token) as { userId: string; username: string };
-    setUser(decoded); // 👈 this triggers re-render in any component using useAuth()
-  };
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-  const logout = () => {
-    localStorage.removeItem("token");
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     window.location.href = "/auth/login";
   };
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, logout }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

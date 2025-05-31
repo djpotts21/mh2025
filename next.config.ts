@@ -1,7 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    domains: ['api.dicebear.com'], // ✅ allow external avatar images
+  },
 };
 
 export default nextConfig;

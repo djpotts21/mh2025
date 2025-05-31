@@ -23,6 +23,10 @@ export async function POST(req: Request) {
     {
       comment_id,
       user_id: user.id,
+      profile: {
+        username: user.user_metadata.username || "Anonymous",
+        avatar_url: user.user_metadata.avatar_url || "https://api.dicebear.com/7.x/identicon/png?seed=" + user.id,
+      },
     },
   ]);
 

@@ -3,34 +3,32 @@
 import { useAuth } from "context/AuthContext";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function LoginPage() {
-  const { login, user } = useAuth();
+  const { user } = useAuth(); // no login() needed anymore
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  // Redirect if user already logged in
+  const supabase = createClientComponentClient();
+
   useEffect(() => {
     if (user) {
       router.push("/about");
     }
-  }, [user, router]); // ✅ added router to dependencies
+  }, [user, router]);
 
   const handleLogin = async () => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: username,
+      password,
     });
 
-    const data = await res.json();
-
-    if (res.ok) {
-      login(data.token);
-      router.push("/about");
+    if (error) {
+      alert(error.message);
     } else {
-      alert(data.error);
+      router.push("/about");
     }
   };
 
@@ -40,7 +38,7 @@ export default function LoginPage() {
 
       <input
         type="text"
-        placeholder="Username"
+        placeholder="Email"
         className="w-full p-2 border rounded mb-2"
         value={username}
         onChange={(e) => setUsername(e.target.value)}

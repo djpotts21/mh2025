@@ -1,28 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function RecoverAccountPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const supabase = createClientComponentClient();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMessage("");
 
-    const res = await fetch("/api/auth/recover", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
     });
 
-    const data = await res.json();
-    if (res.ok) {
-      setMessage("Recovery email sent.");
+    if (error) {
+      setMessage(error.message);
     } else {
-      setMessage(data.error || "Failed to send recovery email.");
+      setMessage("✅ Recovery email sent. Please check your inbox.");
     }
   };
 
