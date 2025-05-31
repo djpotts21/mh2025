@@ -1,11 +1,7 @@
-import Image from "next/image";
-import GetHelpBanner from "components/GetHelpBanner";
-
 export default function Home() {
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Welcome to the Support Platform</h1>
-      <GetHelpBanner />
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <h1 className="text-3xl font-bold">Welcome to MH2025</h1>
     </main>
   );
 }

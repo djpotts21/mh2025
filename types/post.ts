@@ -1,7 +1,7 @@
-// types/post.ts
+
 export type Post = {
   id: string;
-  user_id?: number; // optional if not always needed
+  user_id?: number;
   content: string;
   created_at: string;
   user: {

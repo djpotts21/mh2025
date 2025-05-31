@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
-import { Post } from "types/post";
-
-const [posts, setPosts] = useState<Post[]>([]);
-
+import { Post } from "@/types/post";
 
 export default function PostCard({ post }: { post: Post }) {
   const [showComments, setShowComments] = useState(false);
@@ -28,10 +26,12 @@ export default function PostCard({ post }: { post: Post }) {
   return (
     <div className="border rounded-lg p-4 shadow-sm">
       <div className="flex items-start gap-3">
-        <img
+        <Image
           src={post.user.avatar_url || "/avatar.png"}
           alt="avatar"
-          className="w-8 h-8 rounded-full object-cover"
+          width={32}
+          height={32}
+          className="rounded-full object-cover"
         />
         <div>
           <p className="font-semibold">{post.user.username}</p>
@@ -56,7 +56,6 @@ export default function PostCard({ post }: { post: Post }) {
             setFocusThread={setFocusThread}
           />
 
-          {/* Only show main comment form when not in a focused thread */}
           {!focusThread && (
             <CommentForm
               postId={post.id}

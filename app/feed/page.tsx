@@ -1,10 +1,9 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useAuth } from "context/AuthContext";
 import PostCard from "components/PostCard";
-import { Post } from "types/post";
-
-const [posts, setPosts] = useState<Post[]>([]);
+import { Post } from "@/types/post";
 
 export default function FeedPage() {
   const { user } = useAuth();
