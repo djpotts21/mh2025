@@ -14,7 +14,7 @@ export default function RegisterPage() {
     if (user) {
       router.push("/about");
     }
-  }, [user]);
+  }, [user, router]); // ✅ added router to dependencies
 
   const handleRegister = async () => {
     const res = await fetch("/api/auth/register", {
@@ -27,8 +27,8 @@ export default function RegisterPage() {
 
     if (res.ok) {
       alert(`✅ Registration successful!\n\nYour recovery key is:\n${data.recoveryKey}\n\nSave it safely.`);
-      
-      // Optional: log them in automatically
+
+      // Auto-login
       const loginRes = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,9 +50,8 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-md mx-auto mt-12 p-6 border rounded-xl shadow">
-      <h2 className="text-xl font-bold mb-4 text-center">
-        Register
-      </h2>
+      <h2 className="text-xl font-bold mb-4 text-center">Register</h2>
+
       <input
         type="text"
         placeholder="Username"
@@ -74,13 +73,12 @@ export default function RegisterPage() {
       >
         Register
       </button>
+
       <p className="text-sm text-center mt-4">
-        <span>
-          Already have an account?{" "}
-          <a className="font-bold" href="/auth/login">
-            Login
-          </a>
-        </span>
+        Already have an account?{" "}
+        <a className="font-bold" href="/auth/login">
+          Login
+        </a>
       </p>
     </div>
   );

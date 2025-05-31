@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
@@ -11,17 +11,17 @@ export default function PostCard({ post }: { post: Post }) {
   const [commentCount, setCommentCount] = useState(0);
   const [focusThread, setFocusThread] = useState<string | null>(null);
 
-  const fetchCommentCount = async () => {
+  const fetchCommentCount = useCallback(async () => {
     const res = await fetch(`/api/feed/comments/count?post_id=${post.id}`);
     if (res.ok) {
       const data = await res.json();
       setCommentCount(data.count);
     }
-  };
+  }, [post.id]); // ✅ declared with useCallback and uses post.id as dep
 
   useEffect(() => {
     fetchCommentCount();
-  }, [post.id]);
+  }, [fetchCommentCount]); // ✅ uses memoized function as dep
 
   return (
     <div className="border rounded-lg p-4 shadow-sm">

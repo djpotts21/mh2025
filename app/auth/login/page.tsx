@@ -1,32 +1,21 @@
 "use client";
+
 import { useAuth } from "context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-
-
 
 export default function LoginPage() {
-
-  // Constants
-
-  const { login } = useAuth(); 
+  const { login, user } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const { user } = useAuth(); 
 
-  // Redirect to chat if user is already logged in
-  // This effect runs when the component mounts and checks if the user is logged in
+  // Redirect if user already logged in
   useEffect(() => {
     if (user) {
       router.push("/about");
     }
-  }, [user]);
-
-
-  // Login function
-  // This function sends a POST request to the server with the username and password
+  }, [user, router]); // ✅ added router to dependencies
 
   const handleLogin = async () => {
     const res = await fetch("/api/auth/login", {
@@ -38,17 +27,17 @@ export default function LoginPage() {
     const data = await res.json();
 
     if (res.ok) {
-      login(data.token); // 👈 this updates AuthContext, causing Navbar to re-render
-      router.push("/about");      // 👈 redirect to chat or wherever you want
+      login(data.token);
+      router.push("/about");
     } else {
       alert(data.error);
     }
   };
+
   return (
     <div className="max-w-md mx-auto mt-12 p-6 border rounded-xl shadow">
-      <h2 className="text-xl font-bold mb-4 text-center">
-        Login
-      </h2>
+      <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
+
       <input
         type="text"
         placeholder="Username"
@@ -56,6 +45,7 @@ export default function LoginPage() {
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
+
       <input
         type="password"
         placeholder="Password"
@@ -63,24 +53,27 @@ export default function LoginPage() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button type="submit" onClick={handleLogin} className="w-full bg-blue-600 text-white p-2 rounded mb-2">
+
+      <button
+        type="submit"
+        onClick={handleLogin}
+        className="w-full bg-blue-600 text-white p-2 rounded mb-2"
+      >
         Login
       </button>
+
       <p className="text-sm text-center mt-4">
-        <span>
-          Don’t have an account?{" "}
-          <a className="font-bold" href="/auth/register">
-            Register
-          </a>
-        </span>
+        Don’t have an account?{" "}
+        <a className="font-bold" href="/auth/register">
+          Register
+        </a>
       </p>
+
       <p className="text-sm text-center mt-4">
-        <span>
-          Forgot your password?{" "}
-          <a className="font-bold" href="/auth/recover-account">
-            Recover Account
-          </a>
-        </span>
+        Forgot your password?{" "}
+        <a className="font-bold" href="/auth/recover-account">
+          Recover Account
+        </a>
       </p>
     </div>
   );
