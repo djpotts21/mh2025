@@ -1,23 +1,26 @@
+export const runtime = "nodejs";
+
 import { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
 export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const commentId = params.id;
+  const { id: commentId } = await context.params;
+
+  const cookieStore = cookies(); // don't await
+  const supabase = createServerComponentClient({ cookies: () => Promise.resolve(cookieStore) });
 
   const { data, error } = await supabase
     .from("comments")
     .select("*, user:users(username, avatar_url)")
-    .eq("parent_id", commentId)
-    .order("created_at", { ascending: true });
+    .eq("parent_id", commentId);
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 
-  return new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(JSON.stringify(data), { status: 200 });
 }

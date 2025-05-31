@@ -2,17 +2,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "context/AuthContext";
 import PostCard from "components/PostCard";
+import { Post } from "types/post";
 
-type Post = {
-  id: string;
-  user_id: number;
-  content: string;
-  created_at: string;
-  user?: {
-    username: string;
-    avatar_url?: string;
-  };
-};
+const [posts, setPosts] = useState<Post[]>([]);
 
 export default function FeedPage() {
   const { user } = useAuth();

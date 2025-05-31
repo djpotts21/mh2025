@@ -3,16 +3,10 @@
 import { useEffect, useState } from "react";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
+import { Post } from "types/post";
 
-type Post = {
-  id: string;
-  content: string;
-  created_at: string;
-  user: {
-    username: string;
-    avatar_url?: string;
-  };
-};
+const [posts, setPosts] = useState<Post[]>([]);
+
 
 export default function PostCard({ post }: { post: Post }) {
   const [showComments, setShowComments] = useState(false);
