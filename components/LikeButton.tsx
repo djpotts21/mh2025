@@ -1,12 +1,13 @@
 "use client";
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-
-const supabase = createClientComponentClient<Database>();
-
 import { useEffect, useState } from "react";
 import { HeartIcon as SolidHeart } from "@heroicons/react/24/solid";
 import { HeartIcon as OutlineHeart } from "@heroicons/react/24/outline";
+import clsx from "clsx";
+import { Database } from "@/types/supabase";
+
+const supabase = createClientComponentClient<Database>();
 
 interface LikeButtonProps {
   targetId: string;
@@ -23,26 +24,26 @@ export default function LikeButton({ targetId, type }: LikeButtonProps) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [animate, setAnimate] = useState(false);
 
   const fetchLikes = async () => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const res = await fetch("/api/feed/likes", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ [`${type}_id`]: targetId }),
-  });
+    const res = await fetch("/api/feed/likes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [`${type}_id`]: targetId }),
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (res.ok && user) {
-    setLiked(data.likes.some((l: { user_id: string }) => l.user_id === user.id));
-    setLikeCount(data.likes.length);
-  }
-};
-
+    if (res.ok && user) {
+      setLiked(data.likes.some((l: { user_id: string }) => l.user_id === user.id));
+      setLikeCount(data.likes.length);
+    }
+  };
 
   const toggleLike = async () => {
     if (loading) return;
@@ -57,7 +58,12 @@ export default function LikeButton({ targetId, type }: LikeButtonProps) {
       body: JSON.stringify({ [`${type}_id`]: targetId }),
     });
 
-    if (res.ok) await fetchLikes();
+    if (res.ok) {
+      setAnimate(true);
+      await fetchLikes();
+      setTimeout(() => setAnimate(false), 600); // match tailwind duration
+    }
+
     setLoading(false);
   };
 
@@ -69,7 +75,7 @@ export default function LikeButton({ targetId, type }: LikeButtonProps) {
 
   return (
     <button onClick={toggleLike} className="flex items-center gap-1 text-sm text-pink-600">
-      <Icon className="h-5 w-5" />
+      <Icon className={clsx("h-5 w-5", animate && "animate-tada")} />
       {formatCount(likeCount)}
     </button>
   );
