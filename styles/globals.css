@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 
 @tailwind base;
@@ -5,8 +6,9 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FAF5EF;
+  --foreground: #1C1C1E;
+  --borderradius: 1rem; 
 }
 
 @theme inline {
@@ -14,7 +16,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-
   --animate-tada: tada 0.6s ease;
 
   @keyframes tada {
@@ -48,15 +49,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1C1C1E;
+    --foreground: #FAF5EF;
+    --borderradius: 1rem; /* 6px */
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Inter", "DM Serif Display", serif;
 }
 
 ::-webkit-scrollbar {
@@ -70,4 +72,15 @@ body {
 ::-webkit-scrollbar-thumb {
   background-color: #4b5563;
   border-radius: 9999px;
+}
+
+.gradient-background {
+  animation: animateBg 15s linear infinite;
+  background-image: linear-gradient(90deg, #c2a4ff, #9fd3ff, #ffb287, #faf5ef, #c2a4ff, #9fd3ff);
+  background-size: 500% 100%;
+}
+
+@keyframes animateBg {
+  0% { background-position: 100% 0%; }
+  100% { background-position: 0% 0%; }
 }

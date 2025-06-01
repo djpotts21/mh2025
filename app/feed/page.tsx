@@ -56,7 +56,7 @@ export default function FeedPage() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
+    <div className="max-w-2xl mx-auto p-4" style={{ backgroundColor: "var(--background)", color: "var(--foreground)", borderRadius: "var(--borderradius)" }}>
       <h1 className="text-2xl font-bold mb-4">📝 Public Feed</h1>
 
       {user && (
@@ -67,11 +67,13 @@ export default function FeedPage() {
             rows={3}
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            style={{ backgroundColor: "var(--background)", color: "var(--foreground)", borderRadius: "var(--borderradius)" }}
           />
           <button
             onClick={handlePost}
             disabled={loading}
             className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            style={{ backgroundColor: "var(--foreground)", color: "var(--background)", borderRadius: "var(--borderradius)" }}
           >
             {loading ? "Posting..." : "Post"}
           </button>

@@ -26,7 +26,7 @@ export default function PostCard({ post }: { post: Post }) {
   }, [post.id]);
 
   return (
-    <div className="border rounded-lg p-4 shadow-sm">
+    <div className="border rounded-lg p-4 shadow-sm" style={{ backgroundColor: "var(--background)", color: "var(--foreground)", borderRadius: "var(--borderradius)" }}>
       <div className="flex items-start gap-3">
         <Image
           src={
