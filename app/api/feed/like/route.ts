@@ -3,7 +3,18 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
-  const { post_id } = await req.json();
+  let { post_id, comment_id } = await req.json();
+
+  // Clean up values
+  if (post_id === "null" || post_id === undefined) post_id = null;
+  if (comment_id === "null" || comment_id === undefined) comment_id = null;
+
+  if ((post_id && comment_id) || (!post_id && !comment_id)) {
+    return NextResponse.json(
+      { error: "Provide either post_id or comment_id" },
+      { status: 400 }
+    );
+  }
 
   const cookieStore = await cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
@@ -17,15 +28,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if the user has already liked the post
-  const { data: existingLike, error: likeFetchError } = await supabase
+  const target = post_id ? { post_id } : { comment_id };
+
+  // Check for existing like
+  const { data: existingLike, error: fetchError } = await supabase
     .from("likes")
     .select("id")
-    .eq("post_id", post_id)
-    .eq("user_id", user.id)
+    .match({ ...target, user_id: user.id })
     .maybeSingle();
 
-  if (likeFetchError) {
+  if (fetchError) {
     return NextResponse.json({ error: "Failed to check like" }, { status: 500 });
   }
 
@@ -44,7 +56,7 @@ export async function POST(req: NextRequest) {
   } else {
     // Like
     const { error: insertError } = await supabase.from("likes").insert({
-      post_id,
+      ...target,
       user_id: user.id,
     });
 

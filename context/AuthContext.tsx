@@ -2,10 +2,17 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
+
+interface AuthUser {
+  id: string;
+  email: string;
+  username: string | null;
+  avatar_url: string | null;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   logout: () => Promise<void>;
 }
 
@@ -13,17 +20,40 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const supabase = createClientComponentClient();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  const fetchUserWithProfile = async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data?.user) {
+      setUser(null);
+      return;
+    }
+
+    const baseUser = data.user;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username, avatar_url")
+      .eq("id", baseUser.id)
+      .maybeSingle();
+
+    setUser({
+      id: baseUser.id,
+      email: baseUser.email ?? "",
+      username: profile?.username ?? null,
+      avatar_url: profile?.avatar_url ?? null,
+    });
+  };
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (data?.user) setUser(data.user);
-    };
-    getUser();
+    fetchUserWithProfile();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserWithProfile();
+      } else {
+        setUser(null);
+      }
     });
 
     return () => {
