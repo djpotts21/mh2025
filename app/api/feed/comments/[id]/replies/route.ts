@@ -16,7 +16,7 @@ export async function GET(
   const { data, error } = await supabase
     .from("comments")
     .select("* , profile: user(user_metadata(username, avatar_url))")
-    .eq("parent_id", commentId);
+    .eq("post_id", commentId);
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });

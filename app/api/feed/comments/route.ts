@@ -1,38 +1,33 @@
-// app/api/feed/comments/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
-import { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase"; // adjust if you don’t use alias
-
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const postId = searchParams.get("post_id");
 
   if (!postId) {
-    return new Response(JSON.stringify({ error: "Missing post_id" }), {
-      status: 400,
-    });
+    return NextResponse.json({ error: "Missing post_id" }, { status: 400 });
   }
+
+  const cookieStore = await cookies();
+  const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
   const { data, error } = await supabase
     .from("comments")
     .select(`
-      id,
-      post_id,
-      content,
-      created_at,
-      parent_id,
-      profile: {
-        username: user.user_metadata.username || "Anonymous",
-        avatar_url: user.user_metadata.avatar_url || "https://api.dicebear.com/7.x/identicon/png?seed=" + user.id,
-      },
+      *,
+      user:profiles (
+        username,
+        avatar_url
+      )
     `)
-    .eq("post_id", postId);
+    .eq("post_id", postId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return NextResponse.json(data);
 }

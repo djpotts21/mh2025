@@ -1,27 +1,32 @@
-import { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { NextRequest, NextResponse } from "next/server";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
+export async function POST(req: NextRequest) {
+  const { content } = await req.json();
 
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
+  const cookieStore = await cookies();
+  const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
-  const { data, error } = await supabase
-    .from("posts")
-    .select("id, content, created_at, user_id, profile: user(user_metadata(username, avatar_url))")
-    .order("created_at", { ascending: false })
-    .range(from, to);
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-    });
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json" },
-  });
+  const { error } = await supabase.from("posts").insert([
+    {
+      user_id: user.id,
+      content,
+    },
+  ]);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ message: "Posted successfully" });
 }

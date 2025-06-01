@@ -22,28 +22,34 @@ export default function FeedPage() {
   };
 
   const handlePost = async () => {
-    if (!content.trim()) return;
+  if (!content.trim()) return;
 
-    setLoading(true);
-    const res = await fetch("/api/feed/post", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ content }),
-    });
+  setLoading(true);
+  const res = await fetch("/api/feed/post", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content }),
+  });
 
-    if (res.ok) {
-      setContent("");
-      await fetchPosts();
-    } else {
-      const err = await res.json();
-      console.error("Post failed:", err?.error || "Unknown error");
-    }
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (err) {
+    console.error("Failed to parse JSON:", err);
+  }
 
-    setLoading(false);
-  };
+  if (res.ok) {
+    setContent("");
+    await fetchPosts(); // reload posts
+  } else {
+    console.error("Post failed:", data?.error || "Unknown error");
+  }
+
+  setLoading(false);
+};
+
 
   useEffect(() => {
     fetchPosts();

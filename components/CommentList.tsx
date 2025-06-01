@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import LikeButton from "./LikeButton";
 
 interface Comment {
   id: string;
   content: string;
   created_at: string;
   parent_id?: string;
-  user_id: string;
-  profiles: {
+  user: {
+    id: string;
     username: string;
-    avatar_url: string;
+    avatar_url?: string;
   };
 }
 
@@ -28,8 +29,10 @@ export default function CommentList({ postId, focusThread, setFocusThread }: Com
     const res = await fetch(`/api/feed/comments?post_id=${postId}`);
     if (res.ok) {
       const data = await res.json();
-      // Sort newest to oldest
-      const sorted = data.sort((a: Comment, b: Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const sorted = data.sort(
+        (a: Comment, b: Comment) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
       setComments(sorted);
     }
   };
@@ -39,18 +42,24 @@ export default function CommentList({ postId, focusThread, setFocusThread }: Com
   }, [postId]);
 
   return (
-    <div className="max-h-48 overflow-y-auto pr-2 space-y-3 border-t border-gray-700 mt-4 pt-4">
+    <div className="max-h-60 overflow-y-auto pr-1 space-y-4 border-t border-gray-700 mt-4 pt-4 scrollbar-thick scrollbar-thumb-gray-600 scrollbar-track-gray-800">
       {comments.map((comment) => (
-        <div key={comment.id} className="flex items-start gap-3 px-2 py-1">
+        <div key={comment.id} className="flex items-start gap-2">
           <Image
-            src={comment.profiles.avatar_url || `https://api.dicebear.com/7.x/identicon/png?seed=${comment.user_id}`}
+            src={
+              comment.user.avatar_url ||
+              `https://api.dicebear.com/7.x/identicon/png?seed=${comment.user.id}`
+            }
             alt="avatar"
             width={24}
             height={24}
             className="rounded-full object-cover"
           />
           <div className="flex-1">
-            <p className="font-semibold text-sm">{comment.profiles.username}</p>
+            <div className="flex justify-between">
+              <p className="font-semibold text-sm">{comment.user.username}</p>
+              <LikeButton targetId={comment.id} type="comment" />
+            </div>
             <p className="text-sm">{comment.content}</p>
             <p className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString()}</p>
           </div>

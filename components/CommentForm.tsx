@@ -3,11 +3,9 @@ import { useState } from "react";
 
 export default function CommentForm({
   postId,
-  parentId = null,
   onComment,
 }: {
   postId: string;
-  parentId?: string | null;
   onComment: () => void;
 }) {
   const [content, setContent] = useState("");
@@ -23,7 +21,7 @@ export default function CommentForm({
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ post_id: postId, content, parent_id: parentId }),
+      body: JSON.stringify({content, post_id: postId}),
     });
 
     if (res.ok) {

@@ -1,45 +1,55 @@
 "use client";
 
-import { useAuth } from "context/AuthContext";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function RegisterPage() {
-  const { user } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const router = useRouter();
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    if (user) {
-      router.push("/about");
-    }
-  }, [user, router]);
-
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        router.push("/about");
+      }
+    });
+  }, [router, supabase]);
 
   const handleRegister = async () => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: `${username}@example.com`, // or use real email if required
       password,
     });
 
-    if (error) {
-      alert(error.message);
-    } else if (data.user) {
-      alert("✅ Registration successful. You are now logged in.");
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ username, avatar_url: "https://api.dicebear.com/7.x/identicon/png?seed=" + data.user.id }) 
-        .eq("id", data.user.id);
-      if (profileError) {
-        alert("Error updating profile: " + profileError.message);
-      }
-      router.push("/about");
+    if (signUpError || !signUpData.user) {
+      alert(signUpError?.message || "Registration failed");
+      return;
+    }
+
+    // ✅ Insert into profiles table
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: signUpData.user.id,
+      username,
+    });
+
+    if (profileError) {
+      alert("Profile creation failed");
+      return;
+    }
+
+    // ✅ Auto-login user
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: `${username}@example.com`,
+      password,
+    });
+
+    if (loginError) {
+      alert("User registered, but login failed.");
     } else {
-      alert("Registration email sent. Please check your inbox.");
+      router.push("/about");
     }
   };
 
@@ -48,11 +58,11 @@ export default function RegisterPage() {
       <h2 className="text-xl font-bold mb-4 text-center">Register</h2>
 
       <input
-        type="email"
-        placeholder="Email"
+        type="text"
+        placeholder="Username"
         className="w-full p-2 border rounded mb-2"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
       />
       <input
         type="password"
@@ -60,13 +70,6 @@ export default function RegisterPage() {
         className="w-full p-2 border rounded mb-2"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Username"
-        className="w-full p-2 border rounded mb-2"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
       />
 
       <button

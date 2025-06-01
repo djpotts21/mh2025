@@ -1,19 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { profile } from "console";
 
 interface CommentRequestBody {
-  post_id: string;
   content: string;
-  parent_id?: string;
+  post_id?: string;
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const body: CommentRequestBody = await req.json();
-  const { post_id, content, parent_id } = body;
+  const { content, post_id } = body;
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
   const {
@@ -25,16 +23,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data, error } = await supabase.from("comments").insert([
+  const { error } = await supabase.from("comments").insert([
     {
-      post_id,
       content,
       user_id: user.id,
-      parent_id: parent_id || null,
-      profile: {
-        username: user.user_metadata.username || "Anonymous",
-        avatar_url: user.user_metadata.avatar_url || "https://api.dicebear.com/7.x/identicon/png?seed=" + user.id,
-      },
+      post_id,
     },
   ]);
 
@@ -42,5 +35,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json({ success: true });
 }

@@ -1,13 +1,16 @@
-import { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase"; // adjust if needed
+import { NextRequest, NextResponse } from "next/server";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const postId = searchParams.get("post_id");
+  const postId = new URL(req.url).searchParams.get("post_id");
 
   if (!postId) {
-    return new Response(JSON.stringify({ error: "Missing post_id" }), { status: 400 });
+    return NextResponse.json({ error: "Missing post_id" }, { status: 400 });
   }
+
+  const cookieStore = await cookies();
+  const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
   const { count, error } = await supabase
     .from("comments")
@@ -15,10 +18,9 @@ export async function GET(req: NextRequest) {
     .eq("post_id", postId);
 
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    console.error("Count fetch error:", JSON.stringify(error, null, 2));
+    return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 
-  return new Response(JSON.stringify({ count }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return NextResponse.json({ count });
 }
