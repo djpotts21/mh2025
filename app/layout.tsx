@@ -30,7 +30,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col gradient-background`}>
          <AuthProvider>
-        <Navbar />
+        <Navbar /> Slight change to test deployment
         <main className="flex-grow p-6">{children}</main>
         <Footer />
         </AuthProvider>
